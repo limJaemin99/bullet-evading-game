@@ -22,6 +22,7 @@
 
       this.player; // 플레이어 변수 추가
       this.cursorKeys; // 키보드 변수 추가
+      this.gameState = 0; // 0:Ready, 1:Playing, 2:GameOver
     }
 
     // 에셋 로드 영역
@@ -37,17 +38,55 @@
     // 게임 오브젝트를 만드는 영역
     create() {
       // 플레이어 오브젝트 생성
-      this.player = this.physics.add.image(250, 250, "player");
+      this.player = this.physics.add.image(350, 350, "player");
       // player가 화면 밖으로 나가지 못하도록 설정
       this.player.setCollideWorldBounds(true);
       // 키보드 입력 설정
       this.cursorKeys = this.input.keyboard.createCursorKeys();
+
+      // 시간 텍스트 출력
+      this.second = 0;
+      this.textSecond = this.add.text(10, 10, `Time : ${this.second}s`, {font: "25px Arial", fill: "#FFFFFF"});
+      this.time.addEvent({
+        delay: 1000,
+        callback: () => {
+          if(this.gameState === 1)
+            this.second++;
+        },
+        callbackScope: this,
+        loop: true
+      })
+
+      // 게임 준비 텍스트 출력
+      this.textReady = this.add
+                            .text(350, 425, "Press Space To Start", {font: "25px Arial", fill: "#FFFFFF"})
+                            .setOrigin(0.5);
+
+      //게임 오버 텍스트 출력
+      this.textGameOver = this.add
+                              .text(350, 275, "Game Over", {font: "25px Arial", fill: "#FFFFFF"})
+                              .setOrigin(0.5);
+      this.textGameOver.visible = false;  //게임 오버 텍스트는 총알에 맞았을 경우에만 출력되어야 함
     }
 
     // 로직(코드)을 반복 수행하는 영역
     update() {
       // player를 0만큼 이동 (키를 누르고 있는 동안만 움직이도록)
       this.player.setVelocity(0);
+
+      this.textSecond.setText(`Time : ${this.second}s`);
+
+      if(this.gameState === 0) {
+        if(this.cursorKeys.space.isDown){
+          this.gameState = 1;
+          this.textReady.visible = false;
+        }
+        return;
+      } else if(this.gameState === 2){
+        return;
+      }
+
+      if(this.gameState === 0 || this.gameState === 2)  return;
 
       if (this.cursorKeys.up.isDown) {
         // up 키를 눌렀을 때 player를 Y축 -200만큼 이동
@@ -70,8 +109,8 @@
   // Phaser 게임 설정
   const config = {
     type: Phaser.AUTO, // 게임 타입
-    width: 500, // 가로
-    height: 500, // 세로
+    width: 700, // 가로
+    height: 700, // 세로
     parent: "game", // 게임을 그릴 영역 id
     backgroundColor: "#000000", // 배경 색 RGB
     // 물리 설정. 충돌 처리 등에 사용
